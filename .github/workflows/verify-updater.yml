@@ -1,0 +1,28 @@
+name: Verify Windows updater implementation
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/verify-updater.yml'
+      - 'main.go'
+      - 'updater_windows.go'
+      - 'updatecore/**'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+      - name: Test mapping and update verification
+        run: go test ./selftest ./updatecore
+      - name: Cross-compile complete Windows 64-bit application
+        shell: bash
+        run: |
+          set -euo pipefail
+          CGO_ENABLED=0 GOOS=windows GOARCH=amd64 go build -ldflags="-H windowsgui -s -w -X main.appVersion=v0.5" -o /tmp/WANY-Keyboard-Switcher.exe .
+          test -s /tmp/WANY-Keyboard-Switcher.exe
