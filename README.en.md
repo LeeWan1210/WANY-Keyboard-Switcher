@@ -4,7 +4,7 @@
 
 **Documentation:** [한국어](README.md) · [English (current)](README.en.md) · [日本語](README.ja.md)
 
-> Current version: **v0.5** · Windows 10/11, 64-bit · No AutoHotkey or Interception driver installation required  
+> Current version: **v0.6** · Windows 10/11, 64-bit · No AutoHotkey or Interception driver installation required  
 > **[Download the latest release](https://github.com/LeeWan1210/WANY-Keyboard-Switcher/releases/latest)**
 
 ## Features
@@ -13,7 +13,8 @@
 - Click the notification-area icon to manually switch **US ↔ JIS** profiles.
 - See a **blue US / orange JIS** keyboard icon for the selected profile. The EXE also has an embedded keyboard icon.
 - Adjust a subset of symbol keys in Korean, English, and Japanese input environments.
-- Choose the program's menu language: **Korean, English, or Japanese**. The language and selected keyboard profile are saved.
+- Choose Korean, English, or Japanese from the right-click menu's **Display language submenu**. Your language choice is saved.
+- The pause command now uses the recognizable **⏸ pause symbol** instead of a Roman-numeral-like mark. A **circular pause badge** overlays the gray keyboard icon while conversion is paused.
 - Does not automatically change the Windows keyboard registry or IME hardware-layout settings.
 
 ## Installation and use
@@ -21,7 +22,7 @@
 1. Exit any previously running v0.1/v0.2 instance. Running multiple versions may cause conflicting key interception.
 2. Download and run `WANY-Keyboard-Switcher.exe` from the [releases page](https://github.com/LeeWan1210/WANY-Keyboard-Switcher/releases/latest).
 3. Look for the keyboard icon in the notification area, including the hidden-icons menu (`^`).
-4. **Left-click:** toggle US/JIS while active, or resume conversion when paused. **Right-click:** choose a profile, **pause/resume conversion**, set the Japanese IME baseline, change the menu language, **check for updates**, or exit.
+4. **Left-click:** toggle US/JIS while active, or resume conversion when paused. **Right-click:** choose a profile, **⏸ pause/resume conversion**, set the Japanese IME baseline, choose the **Display language submenu**, **check for updates**, or exit.
 5. Select **JIS** for a physical Japanese keyboard such as the TH108 JIS, and **US** for a physical US/ANSI keyboard.
 6. If you use the Japanese IME, set **Japanese IME Windows layout** in the app menu to match the hardware keyboard layout configured in Windows. This app menu does **not** change the Windows setting.
 
@@ -54,7 +55,7 @@ The selected profile, Japanese IME baseline, and menu language are saved in:
 %APPDATA%\WANYKeyboardSwitcher\settings.json
 ```
 
-The app checks GitHub Releases at startup, but **never downloads or installs an update before you consent**. After approval, it compares the download against GitHub's SHA-256 digest and file size, exits the old instance, replaces the executable, and restarts. If replacement fails, it attempts to restore the original EXE. Auto-replacement may fail in folders where you lack write permission. **To move from v0.4 or earlier to v0.5, install the new EXE manually once.**
+The app checks GitHub Releases at startup, but **never downloads or installs an update before you consent**. After approval, it compares the download against GitHub's SHA-256 digest and file size, exits the old instance, replaces the executable, and restarts. If replacement fails, it attempts to restore the original EXE. Auto-replacement may fail in folders where you lack write permission. **To move from v0.4 or earlier to v0.6, install the new EXE manually once.**
 
 ## Source and building
 
@@ -67,4 +68,4 @@ GOOS=windows GOARCH=amd64 CGO_ENABLED=0 go build -ldflags="-H windowsgui -s -w" 
 
 In Windows PowerShell, set environment variables using the appropriate PowerShell syntax. Python and Pillow are needed only when regenerating icon images. Use `make_windows_resource.py` to regenerate the EXE's icon resource, and keep `rsrc_windows_amd64.syso` in the Go package directory for Windows x64 builds.
 
-**Executable and source ZIP:** [v0.5 release](https://github.com/LeeWan1210/WANY-Keyboard-Switcher/releases/tag/v0.5)
+**Executable and source ZIP:** [v0.6 release](https://github.com/LeeWan1210/WANY-Keyboard-Switcher/releases/tag/v0.6)
