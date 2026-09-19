@@ -167,6 +167,17 @@ func handleUpdateEvent() {
 		}
 		return
 	}
+	// The self-replacing helper intentionally targets the stable release filename.
+	// A user-renamed EXE cannot be updated in place safely by this helper.
+	installedPath, pathErr := os.Executable()
+	if pathErr != nil || !strings.EqualFold(filepath.Base(installedPath), updatecore.Executable) {
+		notice(t(
+			"자동 업데이트를 진행하려면 실행 파일 이름이 WANY-Keyboard-Switcher.exe여야 합니다. GitHub 릴리즈에서 새 파일을 직접 내려받아 실행해 주세요.",
+			"In-place updates require the executable to be named WANY-Keyboard-Switcher.exe. Please download the new EXE from GitHub Releases manually.",
+			"自動更新には実行ファイル名が WANY-Keyboard-Switcher.exe である必要があります。GitHub Releases から新しい EXE を手動でダウンロードしてください。",
+		), MB_OK|MB_ICONINFORMATION)
+		return
+	}
 	question := t(
 		"새 버전 "+ev.release.TagName+"이(가) 있습니다.\n현재 버전: "+appVersion+"\n\nGitHub 릴리즈에서 다운로드하고 프로그램을 다시 시작할까요?",
 		"Version "+ev.release.TagName+" is available.\nInstalled: "+appVersion+"\n\nDownload it from GitHub Releases, replace this executable, and restart?",
