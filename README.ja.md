@@ -69,3 +69,7 @@ GOOS=windows GOARCH=amd64 CGO_ENABLED=0 go build -ldflags="-H windowsgui -s -w" 
 Windows PowerShell では、環境変数を PowerShell の構文で設定してください。アイコン画像を再生成する場合のみ Python と Pillow が必要です。EXE のアイコンリソースを再生成するには `make_windows_resource.py` を使用し、Windows 64 ビット版のビルド時は `rsrc_windows_amd64.syso` を Go のソースディレクトリ内に配置してください。
 
 **実行ファイルとソースコード ZIP：** [v0.6 リリース](https://github.com/LeeWan1210/WANY-Keyboard-Switcher/releases/tag/v0.6)
+
+## ☕ 開発を応援する
+
+この無料ツールは、日本語配列のキーボードで韓国語入力をしながらコーディングするときの不便さを解消するために作りました。お役に立てたら、**[コーヒー一杯で開発を応援していただけるとうれしいです](https://buymeacoffee.com/dldhks1234)**。支援は任意で、寄付しなくてもすべての機能を利用できます。
