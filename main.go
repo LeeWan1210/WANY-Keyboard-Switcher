@@ -1,6 +1,6 @@
 //go:build windows
 
-// WANY Keyboard Layout Switcher v0.3 (Windows x64)
+// WANY Keyboard Layout Switcher (Windows x64)
 // Native tray + low-level keyboard hook. No AutoHotkey or third-party drivers.
 package main
 
@@ -9,13 +9,11 @@ import (
 	_ "embed"
 	"encoding/json"
 	"errors"
-	"fmt"
 	"image/png"
 	"os"
 	"path/filepath"
 	"runtime"
 	"syscall"
-	"time"
 	"unsafe"
 )
 
@@ -58,7 +56,6 @@ const (
 	ID_JIS            = 102
 	ID_BASEJP         = 103
 	ID_EXIT           = 104
-	ID_DIAGNOSTICS    = 105
 	ID_LANG_KO        = 106
 	ID_LANG_EN        = 107
 	ID_LANG_JA        = 108
@@ -163,9 +160,6 @@ var (
 	pDestroyIcon                              = user32.NewProc("DestroyIcon")
 	pGetKeyState                              = user32.NewProc("GetKeyState")
 	appWindow, hook, appIcon, iconUS, iconJIS, iconDisabled uintptr
-	diagnostics                               bool
-	diagnosticPath                            string
-	failedInput                               bool
 	hookCallback, windowCallback              uintptr
 	conf                                      = settings{Profile: "US", JapaneseBaseline: "JIS", UILanguage: "ko"}
 	confPath                                  string
@@ -185,17 +179,6 @@ func writeTip(n *notifyIconData, s string) {
 	}
 	w, _ := syscall.UTF16FromString(s)
 	copy(n.Tip[:], w)
-}
-func logDiagnostic(message string) {
-	if !diagnostics {
-		return
-	}
-	f, e := os.OpenFile(diagnosticPath, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0600)
-	if e != nil {
-		return
-	}
-	defer f.Close()
-	fmt.Fprintf(f, "%s %s\r\n", time.Now().Format("15:04:05.000"), message)
 }
 func makeIcon(pngData []byte, disabled bool) uintptr {
 	im, e := png.Decode(bytes.NewReader(pngData))
@@ -309,7 +292,6 @@ func setProfile(s string) {
 		conf.Profile = s
 		save()
 		updateTrayIcon()
-		logDiagnostic("profile=" + s)
 	}
 }
 func setDisabled(disabled bool) {
@@ -317,7 +299,6 @@ func setDisabled(disabled bool) {
 		conf.Disabled = disabled
 		save()
 		updateTrayIcon()
-		logDiagnostic(fmt.Sprintf("paused=%v", disabled))
 	}
 }
 func setUILanguage(v string) { conf.UILanguage = v; save(); tray(NIM_MODIFY) }
@@ -364,11 +345,9 @@ func popMenu() {
 		appendMenu(menu, flags, o.id, o.name)
 	}
 	pAppendMenu.Call(menu, MF_SEPARATOR, 0, 0)
-	diagFlag := uintptr(MF_STRING)
-	if diagnostics {
-		diagFlag |= MF_CHECKED
-	}
-	appendMenu(menu, diagFlag, ID_DIAGNOSTICS, t("입력 진단 로그 켜기/끄기 (AppData)", "Input diagnostics on/off (AppData)", "入力診断ログ ON/OFF (AppData)"))
+	checkFlag := uintptr(MF_STRING)
+	if updateBusy { checkFlag |= MF_DISABLED }
+	appendMenu(menu, checkFlag, ID_CHECK_UPDATE, t("업데이트 확인 ("+appVersion+")", "Check for updates ("+appVersion+")", "更新を確認 ("+appVersion+")"))
 	pAppendMenu.Call(menu, MF_SEPARATOR, 0, 0)
 	appendMenu(menu, MF_STRING, ID_EXIT, t("프로그램 종료", "Exit WANY Keyboard Switcher", "プログラムを終了"))
 	var pt point
@@ -392,6 +371,9 @@ func wndProc(hwnd uintptr, m uint32, w, l uintptr) uintptr {
 			popMenu()
 		}
 		return 0
+	case WM_UPDATE_RESULT:
+		handleUpdateEvent()
+		return 0
 	case WM_COMMAND:
 		switch uint32(w) & 0xffff {
 		case ID_US:
@@ -408,9 +390,8 @@ func wndProc(hwnd uintptr, m uint32, w, l uintptr) uintptr {
 			}
 			save()
 			tray(NIM_MODIFY)
-		case ID_DIAGNOSTICS:
-			diagnostics = !diagnostics
-			logDiagnostic("diagnostics enabled")
+		case ID_CHECK_UPDATE:
+			beginUpdateCheck(true)
 		case ID_LANG_KO:
 			setUILanguage("ko")
 		case ID_LANG_EN:
@@ -607,10 +588,8 @@ func sendUnicode(s string) bool {
 			{Type: 1, Ki: keybdInput{Scan: uint16(r), Flags: KEYEVENTF_UNICODE}},
 			{Type: 1, Ki: keybdInput{Scan: uint16(r), Flags: KEYEVENTF_UNICODE | KEYEVENTF_KEYUP}},
 		}
-		inserted, _, sendErr := pSendInput.Call(2, uintptr(unsafe.Pointer(&a[0])), unsafe.Sizeof(a[0]))
+		inserted, _, _ := pSendInput.Call(2, uintptr(unsafe.Pointer(&a[0])), unsafe.Sizeof(a[0]))
 		if inserted != 2 {
-			logDiagnostic(fmt.Sprintf("SendInput FAILED count=%d err=%v size=%d", inserted, sendErr, unsafe.Sizeof(a[0])))
-			failedInput = true
 			return false
 		}
 	}
@@ -669,7 +648,6 @@ func keyboardProc(nCode int32, w, l uintptr) uintptr {
 	if !ok {
 		return nextHook(nCode, w, l)
 	}
-	logDiagnostic(fmt.Sprintf("down vk=%02X sc=%02X flags=%02X shift=%v lang=%03X profile=%s base=%s map=%q", k.VkCode, k.ScanCode, k.Flags, shift, lang, conf.Profile, base, text))
 	// Only suppress the original key if synthetic text was actually sent.
 	// Otherwise v0.1's invisible key-loss problem would recur.
 	if text != "" && !sendUnicode(text) {
@@ -683,6 +661,10 @@ func nextHook(n int32, w, l uintptr) uintptr {
 	return r
 }
 func main() {
+	if len(os.Args) > 1 && os.Args[1] == "--apply-update" {
+		applyUpdate(os.Args)
+		return
+	}
 	runtime.LockOSThread()
 	load()
 	windowCallback = syscall.NewCallback(wndProc)
@@ -702,7 +684,6 @@ func main() {
 	if appIcon == 0 {
 		appIcon, _, _ = pLoadIcon.Call(0, IDI_APPLICATION)
 	}
-	diagnosticPath = filepath.Join(filepath.Dir(confPath), "input-diagnostics.log")
 	if unsafe.Sizeof(input{}) != 40 {
 		panic(errors.New("invalid Windows x64 INPUT size"))
 	}
@@ -722,6 +703,8 @@ func main() {
 		tray(NIM_DELETE)
 		return
 	}
+	// Check GitHub in the background on startup; never download without consent.
+	beginUpdateCheck(false)
 	var message msg
 	for {
 		r, _, _ := pGetMessage.Call(uintptr(unsafe.Pointer(&message)), 0, 0, 0)
