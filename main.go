@@ -38,6 +38,7 @@ const (
 	NIF_ICON          = 2
 	NIF_TIP           = 4
 	MF_STRING         = 0
+	MF_POPUP          = 0x10
 	MF_SEPARATOR      = 0x800
 	MF_CHECKED        = 8
 	MF_DISABLED       = 2
@@ -207,14 +208,25 @@ func makeIcon(pngData []byte, disabled bool) uintptr {
 		}
 	}
 	if disabled {
-		// An opaque dark badge with two white pause bars, legible at 16-32 px.
-		for y := 14; y < 27; y++ {
-			for x := 9; x < 24; x++ {
+		// A recognizable pause symbol inside a ring, over the grayed-out keyboard.
+		// A round badge is easier to distinguish from a Roman numeral II.
+		const centerX, centerY, radius = 22, 22, 8
+		for y := centerY - radius; y <= centerY+radius; y++ {
+			for x := centerX - radius; x <= centerX+radius; x++ {
+				dx, dy := x-centerX, y-centerY
+				distanceSquared := dx*dx + dy*dy
+				if distanceSquared > radius*radius {
+					continue
+				}
 				i := (y*n + x) * 4
-				if (x >= 12 && x <= 14 || x >= 18 && x <= 20) && y >= 17 && y <= 23 {
+				switch {
+				case (x == 19 || x == 20 || x == 24 || x == 25) && y >= 18 && y <= 26:
 					xor[i], xor[i+1], xor[i+2], xor[i+3] = 255, 255, 255, 255
-				} else {
-					xor[i], xor[i+1], xor[i+2], xor[i+3] = 62, 54, 48, 255
+				case distanceSquared >= 49:
+					// White outline around the circular pause badge.
+					xor[i], xor[i+1], xor[i+2], xor[i+3] = 235, 235, 235, 255
+				default:
+					xor[i], xor[i+1], xor[i+2], xor[i+3] = 52, 52, 52, 255
 				}
 				andMask[y*n/8+x/8] &^= byte(0x80 >> uint(x%8))
 			}
@@ -328,21 +340,27 @@ func popMenu() {
 	if conf.Disabled {
 		appendMenu(menu, MF_STRING, ID_TOGGLE_ENABLED, t("▶ 키 변환 다시 시작", "▶ Resume key conversion", "▶ キー変換を再開"))
 	} else {
-		appendMenu(menu, MF_STRING, ID_TOGGLE_ENABLED, t("Ⅱ 키 변환 일시중지", "Ⅱ Pause key conversion", "Ⅱ キー変換を一時停止"))
+		appendMenu(menu, MF_STRING, ID_TOGGLE_ENABLED, t("⏸ 키 변환 일시중지", "⏸ Pause key conversion", "⏸ キー変換を一時停止"))
 	}
 	pAppendMenu.Call(menu, MF_SEPARATOR, 0, 0)
 	appendMenu(menu, jpFlag, ID_BASEJP, t("일본어 IME 실제 배열: "+conf.JapaneseBaseline+" (클릭하여 변경)", "Japanese IME Windows layout: "+conf.JapaneseBaseline+" (click to change)", "日本語IMEのWindows配列: "+conf.JapaneseBaseline+" (クリックで変更)"))
 	pAppendMenu.Call(menu, MF_SEPARATOR, 0, 0)
-	appendMenu(menu, MF_STRING|MF_DISABLED, 0, t("메뉴 표시 언어 / UI 언어", "Menu language / UI language", "表示言語 / UI言語"))
-	for _, o := range []struct {
-		id         uintptr
-		name, code string
-	}{{ID_LANG_KO, "한국어", "ko"}, {ID_LANG_EN, "English", "en"}, {ID_LANG_JA, "日本語", "ja"}} {
-		flags := uintptr(MF_STRING)
-		if o.code == conf.UILanguage {
-			flags |= MF_CHECKED
+	// Language changes are rare: keep them under one native Windows submenu.
+	languageMenu, _, _ := pCreateMenu.Call()
+	if languageMenu != 0 {
+		for _, o := range []struct {
+			id         uintptr
+			name, code string
+		}{{ID_LANG_KO, "한국어", "ko"}, {ID_LANG_EN, "English", "en"}, {ID_LANG_JA, "日本語", "ja"}} {
+			flags := uintptr(MF_STRING)
+			if o.code == conf.UILanguage {
+				flags |= MF_CHECKED
+			}
+			appendMenu(languageMenu, flags, o.id, o.name)
 		}
-		appendMenu(menu, flags, o.id, o.name)
+		// The parent menu owns the submenu after AppendMenuW succeeds.
+		// DestroyMenu(parent) will then release both menus together.
+		appendMenu(menu, MF_POPUP|MF_STRING, languageMenu, t("표시 언어", "Display language", "表示言語"))
 	}
 	pAppendMenu.Call(menu, MF_SEPARATOR, 0, 0)
 	checkFlag := uintptr(MF_STRING)
