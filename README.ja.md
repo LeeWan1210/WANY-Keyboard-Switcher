@@ -73,3 +73,5 @@ Windows PowerShell では、環境変数を PowerShell の構文で設定して�
 ## ☕ 開発を応援する
 
 この無料ツールは、日本語配列のキーボードで韓国語入力をしながらコーディングするときの不便さを解消するために作りました。お役に立てたら、**[コーヒー一杯で開発を応援していただけるとうれしいです](https://buymeacoffee.com/dldhks1234)**。支援は任意で、寄付しなくてもすべての機能を利用できます。
+
+<a href="https://buymeacoffee.com/dldhks1234"><img src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png" alt="Buy me a coffee" width="180"></a>
