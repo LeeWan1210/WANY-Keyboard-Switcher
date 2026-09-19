@@ -62,6 +62,7 @@ const (
 	ID_LANG_KO        = 106
 	ID_LANG_EN        = 107
 	ID_LANG_JA        = 108
+	ID_TOGGLE_ENABLED = 109
 	LANG_ENGLISH      = 0x09
 	WM_SENDFEEDBACK   = WM_APP + 2
 	LANG_KOREAN       = 0x12
@@ -121,6 +122,7 @@ type input struct {
 	_    [8]byte
 }
 type settings struct {
+	Disabled         bool   `json:"disabled,omitempty"`
 	Profile          string `json:"profile"`
 	JapaneseBaseline string `json:"japanese_baseline"`
 	UILanguage       string `json:"ui_language"`
@@ -160,7 +162,7 @@ var (
 	pCreateIcon                               = user32.NewProc("CreateIcon")
 	pDestroyIcon                              = user32.NewProc("DestroyIcon")
 	pGetKeyState                              = user32.NewProc("GetKeyState")
-	appWindow, hook, appIcon, iconUS, iconJIS uintptr
+	appWindow, hook, appIcon, iconUS, iconJIS, iconDisabled uintptr
 	diagnostics                               bool
 	diagnosticPath                            string
 	failedInput                               bool
@@ -172,6 +174,8 @@ var (
 	iconDataUS []byte
 	//go:embed icon_jis.png
 	iconDataJIS []byte
+	//go:embed icon_app.png
+	iconDataApp []byte
 )
 
 func ptr(s string) *uint16 { p, _ := syscall.UTF16PtrFromString(s); return p }
@@ -193,7 +197,7 @@ func logDiagnostic(message string) {
 	defer f.Close()
 	fmt.Fprintf(f, "%s %s\r\n", time.Now().Format("15:04:05.000"), message)
 }
-func makeIcon(pngData []byte) uintptr {
+func makeIcon(pngData []byte, disabled bool) uintptr {
 	im, e := png.Decode(bytes.NewReader(pngData))
 	if e != nil {
 		return 0
@@ -207,9 +211,29 @@ func makeIcon(pngData []byte) uintptr {
 			px, py := x*im.Bounds().Dx()/n, y*im.Bounds().Dy()/n
 			r, g, b, a := im.At(px, py).RGBA()
 			i := (y*n + x) * 4
-			xor[i], xor[i+1], xor[i+2], xor[i+3] = byte(b>>8), byte(g>>8), byte(r>>8), byte(a>>8)
+			if disabled {
+				// Neutral grayscale keyboard icon while the conversion is paused.
+				gray := byte((299*(r>>8) + 587*(g>>8) + 114*(b>>8)) / 1000)
+				xor[i], xor[i+1], xor[i+2], xor[i+3] = gray, gray, gray, byte(a>>8)
+			} else {
+				xor[i], xor[i+1], xor[i+2], xor[i+3] = byte(b>>8), byte(g>>8), byte(r>>8), byte(a>>8)
+			}
 			if a == 0 {
 				andMask[y*n/8+x/8] |= byte(0x80 >> uint(x%8))
+			}
+		}
+	}
+	if disabled {
+		// An opaque dark badge with two white pause bars, legible at 16-32 px.
+		for y := 14; y < 27; y++ {
+			for x := 9; x < 24; x++ {
+				i := (y*n + x) * 4
+				if (x >= 12 && x <= 14 || x >= 18 && x <= 20) && y >= 17 && y <= 23 {
+					xor[i], xor[i+1], xor[i+2], xor[i+3] = 255, 255, 255, 255
+				} else {
+					xor[i], xor[i+1], xor[i+2], xor[i+3] = 62, 54, 48, 255
+				}
+				andMask[y*n/8+x/8] &^= byte(0x80 >> uint(x%8))
 			}
 		}
 	}
@@ -263,20 +287,37 @@ func tray(op uintptr) {
 	n.Flags = NIF_MESSAGE | NIF_ICON | NIF_TIP
 	n.Callback = WM_TRAY
 	n.Icon = appIcon
-	writeTip(&n, "WANY Keyboard - "+conf.Profile+" - "+t("클릭: 배열 전환 / 우클릭: 설정", "Click: switch layout / right click: settings", "左クリック: 配列切替 / 右クリック: 設定"))
+	if conf.Disabled {
+		writeTip(&n, "WANY Keyboard - "+conf.Profile+" - "+t("일시중지 중 / 클릭: 다시 시작 / 우클릭: 설정", "Paused / click: resume / right click: settings", "一時停止中 / 左クリック: 再開 / 右クリック: 設定"))
+	} else {
+		writeTip(&n, "WANY Keyboard - "+conf.Profile+" - "+t("클릭: 배열 전환 / 우클릭: 설정", "Click: switch layout / right click: settings", "左クリック: 配列切替 / 右クリック: 設定"))
+	}
 	pNotify.Call(op, uintptr(unsafe.Pointer(&n)))
+}
+func updateTrayIcon() {
+	if conf.Disabled {
+		appIcon = iconDisabled
+	} else if conf.Profile == "JIS" {
+		appIcon = iconJIS
+	} else {
+		appIcon = iconUS
+	}
+	tray(NIM_MODIFY)
 }
 func setProfile(s string) {
 	if conf.Profile != s {
 		conf.Profile = s
 		save()
-		if s == "JIS" {
-			appIcon = iconJIS
-		} else {
-			appIcon = iconUS
-		}
-		tray(NIM_MODIFY)
+		updateTrayIcon()
 		logDiagnostic("profile=" + s)
+	}
+}
+func setDisabled(disabled bool) {
+	if conf.Disabled != disabled {
+		conf.Disabled = disabled
+		save()
+		updateTrayIcon()
+		logDiagnostic(fmt.Sprintf("paused=%v", disabled))
 	}
 }
 func setUILanguage(v string) { conf.UILanguage = v; save(); tray(NIM_MODIFY) }
@@ -302,6 +343,12 @@ func popMenu() {
 	}
 	appendMenu(menu, usFlag, ID_US, t("US / 한국어 배열 키보드", "US / Korean ANSI keyboard", "US / 韓国語 ANSI キーボード"))
 	appendMenu(menu, jiFlag, ID_JIS, t("JIS / 일본어 배열 키보드", "JIS / Japanese keyboard", "JIS / 日本語配列キーボード"))
+	pAppendMenu.Call(menu, MF_SEPARATOR, 0, 0)
+	if conf.Disabled {
+		appendMenu(menu, MF_STRING, ID_TOGGLE_ENABLED, t("▶ 키 변환 다시 시작", "▶ Resume key conversion", "▶ キー変換を再開"))
+	} else {
+		appendMenu(menu, MF_STRING, ID_TOGGLE_ENABLED, t("Ⅱ 키 변환 일시중지", "Ⅱ Pause key conversion", "Ⅱ キー変換を一時停止"))
+	}
 	pAppendMenu.Call(menu, MF_SEPARATOR, 0, 0)
 	appendMenu(menu, jpFlag, ID_BASEJP, t("일본어 IME 실제 배열: "+conf.JapaneseBaseline+" (클릭하여 변경)", "Japanese IME Windows layout: "+conf.JapaneseBaseline+" (click to change)", "日本語IMEのWindows配列: "+conf.JapaneseBaseline+" (クリックで変更)"))
 	pAppendMenu.Call(menu, MF_SEPARATOR, 0, 0)
@@ -334,7 +381,9 @@ func wndProc(hwnd uintptr, m uint32, w, l uintptr) uintptr {
 	switch m {
 	case WM_TRAY:
 		if l == WM_LBUTTONUP {
-			if conf.Profile == "US" {
+			if conf.Disabled {
+				setDisabled(false)
+			} else if conf.Profile == "US" {
 				setProfile("JIS")
 			} else {
 				setProfile("US")
@@ -349,6 +398,8 @@ func wndProc(hwnd uintptr, m uint32, w, l uintptr) uintptr {
 			setProfile("US")
 		case ID_JIS:
 			setProfile("JIS")
+		case ID_TOGGLE_ENABLED:
+			setDisabled(!conf.Disabled)
 		case ID_BASEJP:
 			if conf.JapaneseBaseline == "JIS" {
 				conf.JapaneseBaseline = "US"
@@ -381,6 +432,9 @@ func wndProc(hwnd uintptr, m uint32, w, l uintptr) uintptr {
 		}
 		if iconJIS != 0 {
 			pDestroyIcon.Call(iconJIS)
+		}
+		if iconDisabled != 0 {
+			pDestroyIcon.Call(iconDisabled)
 		}
 		pPostQuit.Call(0)
 		return 0
@@ -590,6 +644,12 @@ func keyboardProc(nCode int32, w, l uintptr) uintptr {
 		r, _, _ := pCallNext.Call(hook, uintptr(nCode), w, l)
 		return r
 	}
+	// Keep the hook installed while paused so the tray icon remains interactive;
+	// pass every new physical key event through unchanged. Previously intercepted
+	// key releases were handled above to avoid sending an orphan key-up.
+	if conf.Disabled {
+		return nextHook(nCode, w, l)
+	}
 	if intercepted[keyID] {
 		return 1
 	} // block autorepeat for remapped symbols
@@ -629,9 +689,12 @@ func main() {
 	hookCallback = syscall.NewCallback(keyboardProc)
 	inst, _, _ := pGetModule.Call(0)
 	cursor, _, _ := pLoadCursor.Call(0, IDC_ARROW)
-	iconUS = makeIcon(iconDataUS)
-	iconJIS = makeIcon(iconDataJIS)
-	if conf.Profile == "JIS" {
+	iconUS = makeIcon(iconDataUS, false)
+	iconJIS = makeIcon(iconDataJIS, false)
+	iconDisabled = makeIcon(iconDataApp, true)
+	if conf.Disabled {
+		appIcon = iconDisabled
+	} else if conf.Profile == "JIS" {
 		appIcon = iconJIS
 	} else {
 		appIcon = iconUS
