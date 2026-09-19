@@ -69,3 +69,7 @@ GOOS=windows GOARCH=amd64 CGO_ENABLED=0 go build -ldflags="-H windowsgui -s -w" 
 In Windows PowerShell, set environment variables using the appropriate PowerShell syntax. Python and Pillow are needed only when regenerating icon images. Use `make_windows_resource.py` to regenerate the EXE's icon resource, and keep `rsrc_windows_amd64.syso` in the Go package directory for Windows x64 builds.
 
 **Executable and source ZIP:** [v0.6 release](https://github.com/LeeWan1210/WANY-Keyboard-Switcher/releases/tag/v0.6)
+
+## ☕ Support development
+
+This free utility grew out of the frustration of coding with a Japanese keyboard while typing in Korean. If it has helped you, you can **[buy me a coffee](https://buymeacoffee.com/dldhks1234)**. Support is entirely optional; all features remain available without a donation.
