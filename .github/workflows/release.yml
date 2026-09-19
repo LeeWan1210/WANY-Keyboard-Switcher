@@ -15,16 +15,19 @@ jobs:
         with:
           go-version-file: go.mod
       - name: Test symbol mapping
-        run: go test ./selftest
+        run: go test ./selftest ./updatecore
       - name: Build Windows executable with embedded icon
         shell: pwsh
         run: |
           New-Item -Type Directory dist -Force | Out-Null
-          go build -ldflags='-H windowsgui -s -w' -o dist/WANY-Keyboard-Switcher.exe .
+          $env:CGO_ENABLED='0'
+          $env:GOOS='windows'
+          $env:GOARCH='amd64'
+          go build -ldflags='-H windowsgui -s -w -X main.appVersion=${{ github.ref_name }}' -o dist/WANY-Keyboard-Switcher.exe .
       - name: Package source
         shell: pwsh
         run: |
-          $paths = @('main.go','go.mod','README.md','README.en.md','README.ja.md','release-notes','icon_app.ico','icon_app.png','icon_us.ico','icon_us.png','icon_jis.ico','icon_jis.png','rsrc_windows_amd64.syso','make_icons.py','make_windows_resource.py','selftest')
+          $paths = @('main.go','updater_windows.go','go.mod','updatecore','README.md','README.en.md','README.ja.md','release-notes','icon_app.ico','icon_app.png','icon_us.ico','icon_us.png','icon_jis.ico','icon_jis.png','rsrc_windows_amd64.syso','make_icons.py','make_windows_resource.py','selftest')
           Compress-Archive -Path $paths -DestinationPath dist/WANY-Keyboard-Switcher-source.zip -Force
       - name: Upload GitHub Release assets
         if: startsWith(github.ref, 'refs/tags/v')
