@@ -4,11 +4,12 @@
 
 **ドキュメントの言語：** [한국어](README.md) · [English](README.en.md) · [日本語（表示中）](README.ja.md)
 
-> 現在のバージョン：**v0.3** · Windows 10/11、64 ビット · AutoHotkey および Interception ドライバーの別途インストールは不要  
+> 現在のバージョン：**v0.4** · Windows 10/11、64 ビット · AutoHotkey および Interception ドライバーの別途インストールは不要  
 > **[最新版のダウンロード](https://github.com/LeeWan1210/WANY-Keyboard-Switcher/releases/latest)**
 
 ## 主な機能
 
+- **一時停止／再開：** 終了せずにキー変換だけを停止できます。停止中は元のキー入力をそのまま通し、通知領域のアイコンは一時停止マーク付きの灰色になります。状態は保存されます。
 - 通知領域のアイコンをクリックして、**US ↔ JIS** のプロファイルを手動で切り替えます。
 - 選択中の配列に合わせて、**青い US／オレンジ色の JIS** キーボードアイコンを表示します。実行ファイルにもキーボードアイコンが組み込まれています。
 - 韓国語・英語・日本語の入力環境で、一部の記号キーの配列差を補正します。
@@ -18,11 +19,13 @@
 ## インストールと使い方
 
 1. 旧バージョン（v0.1／v0.2）を実行している場合は、先に終了してください。複数のバージョンを同時に起動すると、キー入力が競合する可能性があります。
-2. [リリースページ](https://github.com/LeeWan1210/WANY-Keyboard-Switcher/releases/latest)から `WANY-Keyboard-Switcher-v0.3.exe` をダウンロードして実行します。
+2. [リリースページ](https://github.com/LeeWan1210/WANY-Keyboard-Switcher/releases/latest)から `WANY-Keyboard-Switcher-v0.4.exe` をダウンロードして実行します。
 3. 画面右下の通知領域でキーボードアイコンを探します。表示されない場合は、隠れているアイコンのメニュー（`^`）も確認してください。
-4. **左クリック：** US/JIS の切り替え。**右クリック：** プロファイル選択、日本語 IME の基準配列、メニュー言語、入力診断ログ、終了。
+4. **左クリック：** 通常時は US/JIS の切り替え、一時停止中は変換の再開。**右クリック：** プロファイル選択、**キー変換の一時停止／再開**、日本語 IME の基準配列、メニュー言語、入力診断ログ、終了。
 5. TH108 JIS など日本語配列の物理キーボードでは **JIS**、US/ANSI 配列の物理キーボードでは **US** を選択します。
 6. 日本語 IME を使用する場合は、アプリの **「日本語 IME の Windows 配列」** を、Windows 側で設定されているハードウェアキーボード配列と一致させてください。このメニューを操作しても Windows 自体の設定は変わりません。
+
+**一時停止中：** アプリは終了せず、元のキー入力をそのまま通します。アイコンは一時停止マーク付きの灰色になり、左クリックまたは右クリックメニューから変換を再開できます。一時停止状態と選択した配列は次回の起動時にも保持されます。
 
 **注意：** 接続されている物理キーボードを自動判別する機能はありません。キーボードを変更するときは、プロファイルを手動で選択してください。
 
@@ -62,9 +65,9 @@
 
 ```sh
 go test ./selftest
-GOOS=windows GOARCH=amd64 CGO_ENABLED=0 go build -ldflags="-H windowsgui -s -w" -o WANY-Keyboard-Switcher-v0.3.exe .
+GOOS=windows GOARCH=amd64 CGO_ENABLED=0 go build -ldflags="-H windowsgui -s -w" -o WANY-Keyboard-Switcher-v0.4.exe .
 ```
 
 Windows PowerShell では、環境変数を PowerShell の構文で設定してください。アイコン画像を再生成する場合のみ Python と Pillow が必要です。EXE のアイコンリソースを再生成するには `make_windows_resource.py` を使用し、Windows 64 ビット版のビルド時は `rsrc_windows_amd64.syso` を Go のソースディレクトリ内に配置してください。
 
-**実行ファイルとソースコード ZIP：** [v0.3 リリース](https://github.com/LeeWan1210/WANY-Keyboard-Switcher/releases/tag/v0.3)
+**実行ファイルとソースコード ZIP：** [v0.4 リリース](https://github.com/LeeWan1210/WANY-Keyboard-Switcher/releases/tag/v0.4)
