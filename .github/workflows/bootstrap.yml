@@ -1,10 +1,11 @@
 name: Publish WANY Keyboard Switcher v0.3
 on:
   push:
-    branches:
-      - main
+    branches: [main]
     paths:
-      - 'WANY-Keyboard-Switcher-v0.3-source.zip'
+      - '.github/workflows/bootstrap.yml'
+      - 'WANY-Keyboard-Switcher-v0.3-SOURCE-DOWNLOAD.zip'
+  workflow_dispatch:
 permissions:
   contents: write
 jobs:
@@ -14,65 +15,53 @@ jobs:
       - uses: actions/checkout@v4
         with:
           persist-credentials: true
-      - name: Unpack uploaded source and validate
+      - name: Unpack v0.3 source
         shell: bash
         run: |
           set -euo pipefail
           python3 - <<'PY'
           import pathlib,zipfile,shutil
-          z=pathlib.Path("WANY-Keyboard-Switcher-v0.3-source.zip")
+          archive=pathlib.Path("WANY-Keyboard-Switcher-v0.3-SOURCE-DOWNLOAD.zip")
           root=pathlib.Path(".").resolve()
-          with zipfile.ZipFile(z) as archive:
-              for info in archive.infolist():
-                  path=pathlib.PurePosixPath(info.filename)
+          with zipfile.ZipFile(archive) as z:
+              for info in z.infolist():
                   if info.is_dir(): continue
-                  parts=path.parts
-                  if len(parts)<2 or parts[0]!="WANY-Keyboard-Switcher-v0.3":
-                      raise ValueError("Unexpected ZIP entry: "+info.filename)
-                  rel=pathlib.Path(*parts[1:])
+                  p=pathlib.PurePosixPath(info.filename)
+                  if len(p.parts)<2 or p.parts[0]!="WANY-Keyboard-Switcher-v0.3":
+                      raise ValueError("Unexpected ZIP entry "+info.filename)
+                  rel=pathlib.Path(*p.parts[1:])
                   target=(root/rel).resolve()
-                  if not target.is_relative_to(root): raise ValueError("Unsafe ZIP path")
+                  if not target.is_relative_to(root): raise ValueError("Unsafe path")
                   target.parent.mkdir(parents=True,exist_ok=True)
-                  with archive.open(info) as src,target.open("wb") as dst: shutil.copyfileobj(src,dst)
-          assert pathlib.Path("main.go").exists()
-          assert pathlib.Path("go.mod").exists()
-          assert pathlib.Path("icon_app.ico").exists()
-          assert pathlib.Path("rsrc_windows_amd64.syso").exists()
-          assert pathlib.Path("selftest/mapping_test.go").exists()
+                  with z.open(info) as src,target.open("wb") as dst:
+                      shutil.copyfileobj(src,dst)
+          for name in ("main.go","go.mod","icon_app.ico","icon_us.ico","icon_jis.ico","rsrc_windows_amd64.syso","selftest/mapping_test.go"):
+              assert pathlib.Path(name).is_file(),name
           print("Original v0.3 source extracted")
           PY
-      - name: Commit source and icons to main
-        shell: bash
-        run: |
-          set -euo pipefail
-          git rm -f WANY-Keyboard-Switcher-v0.3-source.zip
-          git rm -rf --ignore-unmatch seed
-          git rm -f --ignore-unmatch .github/workflows/bootstrap.yml
-          git add -A
-          git -c user.name='github-actions[bot]' -c user.email='41898282+github-actions[bot]@users.noreply.github.com' commit -m 'Publish WANY Keyboard Switcher v0.3 source, icons and CI'
-          git push origin HEAD:main
       - uses: actions/setup-go@v5
         with:
           go-version-file: go.mod
-      - name: Test and build Windows x64 executable
+      - name: Run tests and build Windows x64 EXE
         shell: bash
         run: |
           set -euo pipefail
           go test ./selftest
           mkdir -p dist
           CGO_ENABLED=0 GOOS=windows GOARCH=amd64 go build -ldflags='-H windowsgui -s -w' -o dist/WANY-Keyboard-Switcher-v0.3.exe .
-          python3 - <<'PY'
-          import pathlib, zipfile
-          with zipfile.ZipFile("dist/WANY-Keyboard-Switcher-v0.3-source.zip","w",zipfile.ZIP_DEFLATED) as out:
-              for path in pathlib.Path(".").rglob("*"):
-                  if path.is_file() and (path.suffix in {".go",".py",".md",".ico",".png",".syso"} or str(path)==".github/workflows/release.yml"):
-                      if ".git" not in path.parts and "dist" not in path.parts:
-                          out.write(path)
-          PY
-      - name: Publish v0.3 GitHub Release
+          test -s dist/WANY-Keyboard-Switcher-v0.3.exe
+          cp WANY-Keyboard-Switcher-v0.3-SOURCE-DOWNLOAD.zip dist/WANY-Keyboard-Switcher-v0.3-source.zip
+      - name: Commit readable source, icons, and EXE
+        shell: bash
+        run: |
+          set -euo pipefail
+          git add main.go go.mod README.md icon_app.ico icon_app.png icon_us.ico icon_us.png icon_jis.ico icon_jis.png rsrc_windows_amd64.syso make_icons.py make_windows_resource.py selftest/mapping.go selftest/mapping_test.go dist/WANY-Keyboard-Switcher-v0.3.exe
+          git -c user.name='github-actions[bot]' -c user.email='41898282+github-actions[bot]@users.noreply.github.com' commit -m 'Add WANY Keyboard Switcher v0.3 source, icons, and Windows EXE'
+          git push origin HEAD:main
+      - name: Publish GitHub Release v0.3
         shell: bash
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
-          gh release create v0.3 dist/WANY-Keyboard-Switcher-v0.3.exe dist/WANY-Keyboard-Switcher-v0.3-source.zip --target "$(git rev-parse HEAD)" --title "WANY Keyboard Switcher v0.3" --notes "Windows x64 US/JIS keyboard layout switcher with keyboard icon and Korean, English and Japanese tray menus. Experimental: see README for tested scenarios and limitations."
+          gh release create v0.3 dist/WANY-Keyboard-Switcher-v0.3.exe dist/WANY-Keyboard-Switcher-v0.3-source.zip --target "$(git rev-parse HEAD)" --title "WANY Keyboard Switcher v0.3" --notes "Windows 10/11 x64 US/JIS keyboard layout switcher. Keyboard EXE/tray icons and Korean/English/Japanese menus. See README for tested scenarios and limitations."
