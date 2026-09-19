@@ -73,3 +73,5 @@ Windows PowerShell에서는 환경변수 설정 방식이 다르므로 별도로
 ## ☕ 개발 후원
 
 이 프로그램은 일본어 키보드로 한국어를 입력하며 코딩할 때 겪었던 불편을 해결하려고 만든 무료 도구입니다. 유용하게 사용하고 계신다면 **[커피 한 잔으로 개발을 응원해 주세요](https://buymeacoffee.com/dldhks1234)**. 후원은 선택 사항이며, 후원하지 않아도 프로그램의 모든 기능을 사용할 수 있습니다.
+
+<a href="https://buymeacoffee.com/dldhks1234"><img src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png" alt="Buy me a coffee" width="180"></a>
