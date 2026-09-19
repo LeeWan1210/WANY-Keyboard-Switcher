@@ -1,0 +1,47 @@
+name: Publish WANY Keyboard Switcher v0.5
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/publish-v05.yml'
+permissions:
+  contents: write
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+      - name: Test symbol mapping and update verification
+        run: go test ./selftest ./updatecore
+      - name: Cross-compile Windows x64 with version-free EXE filename
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p dist
+          CGO_ENABLED=0 GOOS=windows GOARCH=amd64 go build -ldflags="-H windowsgui -s -w -X main.appVersion=v0.5" -o dist/WANY-Keyboard-Switcher.exe .
+          test -s dist/WANY-Keyboard-Switcher.exe
+      - name: Package source archive without a version in filename
+        shell: bash
+        run: |
+          set -euo pipefail
+          zip -qr dist/WANY-Keyboard-Switcher-source.zip main.go updater_windows.go go.mod updatecore selftest README.md README.en.md README.ja.md release-notes/v0.5.md icon_app.ico icon_app.png icon_us.ico icon_us.png icon_jis.ico icon_jis.png rsrc_windows_amd64.syso make_icons.py make_windows_resource.py .github/workflows/release.yml
+          test -s dist/WANY-Keyboard-Switcher-source.zip
+      - name: Commit built executable to main
+        shell: bash
+        run: |
+          set -euo pipefail
+          git add dist/WANY-Keyboard-Switcher.exe
+          git -c user.name='github-actions[bot]' -c user.email='41898282+github-actions[bot]@users.noreply.github.com' commit -m 'Add v0.5 Windows executable with stable filename'
+          git push origin HEAD:main
+      - name: Publish three-language v0.5 Release
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          gh release create v0.5 dist/WANY-Keyboard-Switcher.exe dist/WANY-Keyboard-Switcher-source.zip --target "$(git rev-parse HEAD)" --title 'WANY Keyboard Switcher v0.5' --notes-file release-notes/v0.5.md
