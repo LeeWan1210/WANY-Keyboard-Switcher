@@ -69,3 +69,7 @@ GOOS=windows GOARCH=amd64 CGO_ENABLED=0 go build -ldflags="-H windowsgui -s -w" 
 Windows PowerShell에서는 환경변수 설정 방식이 다르므로 별도로 지정해야 합니다. 아이콘 이미지를 다시 생성할 때만 Python과 Pillow가 필요하며, 실행 파일의 아이콘 리소스를 생성하는 스크립트는 `make_windows_resource.py`입니다. Windows 빌드 시 `rsrc_windows_amd64.syso` 파일을 소스 디렉터리에 유지하세요.
 
 **실행 파일과 소스코드 ZIP:** [v0.6 릴리즈](https://github.com/LeeWan1210/WANY-Keyboard-Switcher/releases/tag/v0.6)
+
+## ☕ 개발 후원
+
+이 프로그램은 일본어 키보드로 한국어를 입력하며 코딩할 때 겪었던 불편을 해결하려고 만든 무료 도구입니다. 유용하게 사용하고 계신다면 **[커피 한 잔으로 개발을 응원해 주세요](https://buymeacoffee.com/dldhks1234)**. 후원은 선택 사항이며, 후원하지 않아도 프로그램의 모든 기능을 사용할 수 있습니다.
