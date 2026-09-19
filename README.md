@@ -4,11 +4,12 @@
 
 **문서 언어:** [한국어 (현재)](README.md) · [English](README.en.md) · [日本語](README.ja.md)
 
-> 현재 버전: **v0.3** · Windows 10/11, 64비트 · 별도 AutoHotkey 또는 Interception 드라이버 설치 불필요  
+> 현재 버전: **v0.4** · Windows 10/11, 64비트 · 별도 AutoHotkey 또는 Interception 드라이버 설치 불필요  
 > **[최신 릴리즈 및 실행 파일 다운로드](https://github.com/LeeWan1210/WANY-Keyboard-Switcher/releases/latest)**
 
 ## 주요 기능
 
+- **일시중지/다시 시작:** 프로그램을 종료하지 않고 키 변환만 끕니다. 일시중지 상태에서는 키 입력을 그대로 통과시키고, 알림 영역 아이콘이 회색 키보드와 일시중지 표시로 바뀝니다. 상태는 저장됩니다.
 - 작업표시줄 알림 영역의 아이콘을 클릭하여 **US ↔ JIS** 프로필을 전환합니다.
 - 선택한 프로필에 따라 **파란색 US / 주황색 JIS** 키보드 아이콘을 표시합니다. 실행 파일에도 키보드 아이콘이 포함됩니다.
 - 한국어·영어·일본어 입력 환경에서 일부 기호 키의 배열 차이를 보정합니다.
@@ -18,11 +19,13 @@
 ## 설치 및 사용 방법
 
 1. 이전 버전이 실행 중이라면 먼저 종료합니다. 여러 버전을 동시에 실행하면 키 입력이 충돌할 수 있습니다.
-2. [릴리즈 페이지](https://github.com/LeeWan1210/WANY-Keyboard-Switcher/releases/latest)에서 `WANY-Keyboard-Switcher-v0.3.exe`를 내려받아 실행합니다.
+2. [릴리즈 페이지](https://github.com/LeeWan1210/WANY-Keyboard-Switcher/releases/latest)에서 `WANY-Keyboard-Switcher-v0.4.exe`를 내려받아 실행합니다.
 3. 화면 오른쪽 아래 알림 영역에서 키보드 아이콘을 찾습니다. 보이지 않으면 숨겨진 아이콘 메뉴(`^`)를 확인합니다.
-4. **왼쪽 클릭:** US/JIS 배열 전환. **오른쪽 클릭:** 배열 직접 선택, 일본어 입력기 기준 배열, 메뉴 언어, 진단 로그, 프로그램 종료.
+4. **왼쪽 클릭:** 사용 중에는 US/JIS 배열 전환, 일시중지 중에는 키 변환 다시 시작. **오른쪽 클릭:** 배열 직접 선택, **키 변환 일시중지/다시 시작**, 일본어 입력기 기준 배열, 메뉴 언어, 진단 로그, 프로그램 종료.
 5. 일본어 물리 키보드(예: TH108 JIS)를 사용한다면 **JIS**를, 미국식 배열 키보드를 사용한다면 **US**를 선택합니다.
 6. 일본어 입력기를 사용한다면 프로그램 메뉴의 **「일본어 입력기 실제 배열」**을 Windows의 일본어 입력기 하드웨어 키보드 배열 설정과 일치시킵니다. 이 메뉴는 Windows 설정 자체를 변경하지 않습니다.
+
+**일시중지 상태:** 원래 키 입력을 변경하지 않으며 프로그램은 계속 실행됩니다. 아이콘은 회색으로 표시되고, 아이콘을 왼쪽 클릭하거나 오른쪽 클릭 메뉴에서 ‘키 변환 다시 시작’을 선택하면 복구됩니다. 비활성화 상태와 선택한 키보드 배열은 다음 실행 때도 유지됩니다.
 
 **주의:** 이 프로그램은 연결된 물리 키보드를 자동 인식하지 않습니다. 키보드를 교체할 때 사용자가 프로필을 직접 선택해야 합니다.
 
@@ -62,9 +65,9 @@
 
 ```sh
 go test ./selftest
-GOOS=windows GOARCH=amd64 CGO_ENABLED=0 go build -ldflags="-H windowsgui -s -w" -o WANY-Keyboard-Switcher-v0.3.exe .
+GOOS=windows GOARCH=amd64 CGO_ENABLED=0 go build -ldflags="-H windowsgui -s -w" -o WANY-Keyboard-Switcher-v0.4.exe .
 ```
 
 Windows PowerShell에서는 환경변수 설정 방식이 다르므로 별도로 지정해야 합니다. 아이콘 이미지를 다시 생성할 때만 Python과 Pillow가 필요하며, 실행 파일의 아이콘 리소스를 생성하는 스크립트는 `make_windows_resource.py`입니다. Windows 빌드 시 `rsrc_windows_amd64.syso` 파일을 소스 디렉터리에 유지하세요.
 
-**실행 파일과 소스코드 ZIP:** [v0.3 릴리즈](https://github.com/LeeWan1210/WANY-Keyboard-Switcher/releases/tag/v0.3)
+**실행 파일과 소스코드 ZIP:** [v0.4 릴리즈](https://github.com/LeeWan1210/WANY-Keyboard-Switcher/releases/tag/v0.4)
