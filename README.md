@@ -1,50 +1,70 @@
-# WANY Keyboard Switcher v0.3
+# WANY Keyboard Switcher
 
-A Windows 10/11 (x64) US/JIS keyboard-layout selector for Korean, Japanese and English input. Native Go executable, no AutoHotkey or Interception driver.
+**일본어·미국식 키보드 배열을 작업표시줄에서 수동으로 전환하는 Windows용 프로그램입니다.** 키보드를 바꾸더라도 한국어·영어·일본어 입력기를 사용할 때 주요 특수문자가 물리 키보드의 키캡과 일치하도록 보정합니다.
 
-## 한국어 사용법
+**문서 언어:** [한국어 (현재)](README.md) · [English](README.en.md) · [日本語](README.ja.md)
 
-1. **이전 v0.1/v0.2를 종료**하세요. 여러 버전이 동시에 실행되면 키 입력이 서로 충돌할 수 있습니다.
-2. `WANY-Keyboard-Switcher-v0.3.exe`를 실행합니다. 작업표시줄 알림 영역(숨겨진 아이콘 `^` 포함)에 키보드 모양의 **US(파랑)** 또는 **JIS(주황)** 아이콘이 나타납니다.
-3. 아이콘 **왼쪽 클릭**: US ↔ JIS 프로필 전환. **오른쪽 클릭**: US/JIS 직접 선택, 실제 Windows 일본어 IME 하드웨어 배열(US 또는 JIS) 지정, 표시 언어 선택, 입력 진단 로그, 종료.
-4. 메뉴의 `한국어 / English / 日本語`에서 표시 언어를 선택합니다. 기본값은 한국어입니다. 마지막 선택 언어는 `settings.json`에 저장됩니다.
-5. TH108 JIS 등 일본어 물리 키보드는 JIS 프로필을 선택하고, US/한국어 ANSI 물리 키보드는 US 프로필을 선택합니다. **두 키보드를 동시에 사용하는 자동 장치별 매핑은 지원하지 않습니다.**
-6. 한국어 Windows IME는 기존 **101키 종류 1** 설정을 유지할 수 있습니다. 기존 오른쪽 Alt 한/영 및 오른쪽 Ctrl 한자 동작을 별도로 재매핑하지 않습니다.
-7. **일본어 IME의 Windows 하드웨어 키보드 배열과 메뉴의 `일본어 IME 실제 배열` 값이 일치해야 합니다.** 메뉴 선택은 실제 Windows 설정 자체를 바꾸지 않습니다.
+> 현재 버전: **v0.3** · Windows 10/11, 64비트 · 별도 AutoHotkey 또는 Interception 드라이버 설치 불필요  
+> **[최신 릴리즈 및 실행 파일 다운로드](https://github.com/LeeWan1210/WANY-Keyboard-Switcher/releases/latest)**
 
-## What's new / 更新内容
+## 주요 기능
 
-- Embedded *keyboard illustration* icon for **Explorer's EXE file**, plus separate illustrated US/JIS notification-area icons.
-- Localized tray tooltips and context menu: 한국어 / English / 日本語 (default: Korean, user-selectable and persisted).
-- Keeps v0.2's key conversion logic (no change to the already-used mapping rules).
-- `.rsrc` icon resource is generated reproducibly with the included Python script, using an ordinary Windows PE/COFF resource; tray icons are embedded with `go:embed`.
+- 작업표시줄 알림 영역의 아이콘을 클릭하여 **US ↔ JIS** 프로필을 전환합니다.
+- 선택한 프로필에 따라 **파란색 US / 주황색 JIS** 키보드 아이콘을 표시합니다. 실행 파일에도 키보드 아이콘이 포함됩니다.
+- 한국어·영어·일본어 입력 환경에서 일부 기호 키의 배열 차이를 보정합니다.
+- 프로그램 메뉴를 **한국어·영어·일본어**로 표시할 수 있습니다. 선택한 언어와 키보드 프로필을 저장합니다.
+- Windows의 키보드 레지스트리 설정이나 입력기 하드웨어 배열을 자동으로 변경하지 않습니다.
 
-## Known limitations / 알려진 제한
+## 설치 및 사용 방법
 
-- Input conversion is based on synthetic Unicode for a subset of symbol keys, *not* a full system-wide layout swap. Effects in Japanese IME composition, elevated windows, password fields, games and shortcut-heavy applications may differ.
-- ¥, ろ and Japanese-specific keys need testing with individual keyboards/connection types. Support for Korean-layout keyboards or other hardware has not been verified on Windows.
-- USB 2.4GHz and Bluetooth may present different scan codes for some keys; switch the physical-keyboard profile manually.
-- This project was cross-compiled on Linux and **not tested as a Windows application here**. Use at your own risk; close the app from the tray menu or Task Manager if any keys behave incorrectly.
-- The app does not restore prior Windows-wide `Scancode Map` registry overrides; those should remain removed if they previously made Right Alt act as Convert.
+1. 이전 버전이 실행 중이라면 먼저 종료합니다. 여러 버전을 동시에 실행하면 키 입력이 충돌할 수 있습니다.
+2. [릴리즈 페이지](https://github.com/LeeWan1210/WANY-Keyboard-Switcher/releases/latest)에서 `WANY-Keyboard-Switcher-v0.3.exe`를 내려받아 실행합니다.
+3. 화면 오른쪽 아래 알림 영역에서 키보드 아이콘을 찾습니다. 보이지 않으면 숨겨진 아이콘 메뉴(`^`)를 확인합니다.
+4. **왼쪽 클릭:** US/JIS 배열 전환. **오른쪽 클릭:** 배열 직접 선택, 일본어 입력기 기준 배열, 메뉴 언어, 진단 로그, 프로그램 종료.
+5. 일본어 물리 키보드(예: TH108 JIS)를 사용한다면 **JIS**를, 미국식 배열 키보드를 사용한다면 **US**를 선택합니다.
+6. 일본어 입력기를 사용한다면 프로그램 메뉴의 **「일본어 입력기 실제 배열」**을 Windows의 일본어 입력기 하드웨어 키보드 배열 설정과 일치시킵니다. 이 메뉴는 Windows 설정 자체를 변경하지 않습니다.
 
-## Build / 빌드
+**주의:** 이 프로그램은 연결된 물리 키보드를 자동 인식하지 않습니다. 키보드를 교체할 때 사용자가 프로필을 직접 선택해야 합니다.
 
-Requires Go 1.23+ (and Python 3 with Pillow **only when regenerating icons**). Checked-in icon assets and `rsrc_windows_amd64.syso` are enough to build without Python.
+## 입력기와 키보드 설정
+
+- **한국어:** Windows의 한국어 101키 종류 1 설정을 유지할 수 있습니다. 프로그램은 기존 오른쪽 Alt 한/영 전환 및 오른쪽 Ctrl 한자 키 동작을 별도로 다시 매핑하지 않습니다.
+- **영어:** 선택한 US/JIS 프로필에 따라 지원되는 특수문자 키를 보정합니다.
+- **일본어:** Windows에 설정된 실제 하드웨어 배열(101/102 또는 106/109)과 프로그램 메뉴의 기준 배열을 일치시켜야 합니다. 변환 중인 문자의 동작은 입력기 상태에 따라 다를 수 있습니다.
+
+## 알려진 제한 사항
+
+이 프로그램은 Windows 전체의 키보드 배열을 교체하는 도구가 아니라, **일부 기호 키를 가로채서 문자 입력으로 보정하는 시험판**입니다.
+
+- 일본어 입력기의 조합·변환 중 입력, `¥`, `ろ`, 변환·무변환 등 일본어 전용키는 환경별 추가 검증이 필요합니다.
+- 관리자 권한으로 실행한 앱, 암호 입력란, 게임, 단축키가 많은 프로그램에서는 일반 편집기와 다르게 동작할 수 있습니다.
+- US/한국어 물리 키보드와 다양한 연결 방식에서의 전체 키 동작은 아직 검증하지 못했습니다.
+- 키가 예상과 다르게 입력되면 알림 영역 아이콘을 오른쪽 클릭해 프로그램을 종료하거나 작업 관리자에서 종료하세요.
+- 과거에 설정한 Windows 전역 `Scancode Map` 레지스트리 변경 사항을 이 프로그램이 되돌리지는 않습니다.
+
+## 설정 및 진단 로그
+
+선택한 프로필, 일본어 입력기 기준 배열, 메뉴 언어는 다음 파일에 저장됩니다.
+
+```text
+%APPDATA%\WANYKeyboardSwitcher\settings.json
+```
+
+메뉴에서 진단 로그를 켰을 때의 기록 위치:
+
+```text
+%APPDATA%\WANYKeyboardSwitcher\input-diagnostics.log
+```
+
+## 소스코드 및 빌드
+
+프로그램은 Go로 작성되었습니다. 체크인된 아이콘 리소스를 그대로 사용할 경우 **Go 1.23 이상**으로 Windows 64비트용 빌드가 가능합니다. 아래 명령은 Go가 설치된 환경의 예시입니다.
 
 ```sh
 go test ./selftest
 GOOS=windows GOARCH=amd64 CGO_ENABLED=0 go build -ldflags="-H windowsgui -s -w" -o WANY-Keyboard-Switcher-v0.3.exe .
 ```
 
-To regenerate icon assets (`make_icons.py` requires Pillow and DejaVuSans-Bold font) and the PE icon resource:
+Windows PowerShell에서는 환경변수 설정 방식이 다르므로 별도로 지정해야 합니다. 아이콘 이미지를 다시 생성할 때만 Python과 Pillow가 필요하며, 실행 파일의 아이콘 리소스를 생성하는 스크립트는 `make_windows_resource.py`입니다. Windows 빌드 시 `rsrc_windows_amd64.syso` 파일을 소스 디렉터리에 유지하세요.
 
-```sh
-python make_icons.py
-python make_windows_resource.py
-```
-
-The generated icon file name `rsrc_windows_amd64.syso` must remain inside this Go package when building the Windows x64 executable.
-
-## Settings / 로그
-
-`%APPDATA%\WANYKeyboardSwitcher\settings.json` preserves profile, Japanese IME baseline and menu language. The optional input diagnostics log is at `%APPDATA%\WANYKeyboardSwitcher\input-diagnostics.log`.
+**실행 파일과 소스코드 ZIP:** [v0.3 릴리즈](https://github.com/LeeWan1210/WANY-Keyboard-Switcher/releases/tag/v0.3)
