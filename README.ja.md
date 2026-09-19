@@ -4,7 +4,7 @@
 
 **ドキュメントの言語：** [한국어](README.md) · [English](README.en.md) · [日本語（表示中）](README.ja.md)
 
-> 現在のバージョン：**v0.4** · Windows 10/11、64 ビット · AutoHotkey および Interception ドライバーの別途インストールは不要  
+> 現在のバージョン：**v0.5** · Windows 10/11、64 ビット · AutoHotkey および Interception ドライバーの別途インストールは不要  
 > **[最新版のダウンロード](https://github.com/LeeWan1210/WANY-Keyboard-Switcher/releases/latest)**
 
 ## 主な機能
@@ -19,9 +19,9 @@
 ## インストールと使い方
 
 1. 旧バージョン（v0.1／v0.2）を実行している場合は、先に終了してください。複数のバージョンを同時に起動すると、キー入力が競合する可能性があります。
-2. [リリースページ](https://github.com/LeeWan1210/WANY-Keyboard-Switcher/releases/latest)から `WANY-Keyboard-Switcher-v0.4.exe` をダウンロードして実行します。
+2. [リリースページ](https://github.com/LeeWan1210/WANY-Keyboard-Switcher/releases/latest)から `WANY-Keyboard-Switcher.exe` をダウンロードして実行します。
 3. 画面右下の通知領域でキーボードアイコンを探します。表示されない場合は、隠れているアイコンのメニュー（`^`）も確認してください。
-4. **左クリック：** 通常時は US/JIS の切り替え、一時停止中は変換の再開。**右クリック：** プロファイル選択、**キー変換の一時停止／再開**、日本語 IME の基準配列、メニュー言語、入力診断ログ、終了。
+4. **左クリック：** 通常時は US/JIS の切り替え、一時停止中は変換の再開。**右クリック：** プロファイル選択、**キー変換の一時停止／再開**、日本語 IME の基準配列、メニュー言語、**更新を確認**、終了。
 5. TH108 JIS など日本語配列の物理キーボードでは **JIS**、US/ANSI 配列の物理キーボードでは **US** を選択します。
 6. 日本語 IME を使用する場合は、アプリの **「日本語 IME の Windows 配列」** を、Windows 側で設定されているハードウェアキーボード配列と一致させてください。このメニューを操作しても Windows 自体の設定は変わりません。
 
@@ -31,6 +31,7 @@
 
 ## 入力方式とキーボード設定
 
+- **更新確認：** 起動時に GitHub の最新の正式リリースを確認します。更新があれば先に許可を求め、同意した場合だけ EXE をダウンロード・検証・置換して再起動します。右クリックメニューから手動でも確認できます。
 - **韓国語：** Windows の韓国語 101 キー・種類 1 の設定を維持できます。既存の右 Alt キーによる韓英切り替えや右 Ctrl キーによる漢字変換を、このアプリが個別に再マッピングすることはありません。
 - **英語：** 選択中の US/JIS プロファイルに応じて、対応する一部の記号キーを補正します。
 - **日本語：** Windows の実際のハードウェア配列（101/102 または 106/109）と、アプリ内の基準配列を一致させてください。IME で文字を変換・編集中の動作は状況によって異なる場合があります。
@@ -45,7 +46,7 @@
 - キー入力がおかしくなった場合は、通知領域のメニューまたはタスクマネージャーからアプリを終了してください。
 - 過去に設定した Windows 全体の `Scancode Map` レジストリによるキー割り当ては、このアプリでは元に戻しません。
 
-## 設定ファイルと診断ログ
+## 設定ファイルと更新
 
 選択したプロファイル、日本語 IME の基準配列、メニュー言語は以下に保存されます。
 
@@ -53,11 +54,7 @@
 %APPDATA%\WANYKeyboardSwitcher\settings.json
 ```
 
-メニューから診断ログを有効にした場合の保存先：
-
-```text
-%APPDATA%\WANYKeyboardSwitcher\input-diagnostics.log
-```
+起動時に GitHub の最新リリースを確認しますが、**同意するまでは EXE のダウンロードや更新は行いません。** 承認後、GitHub が公開している SHA-256 ハッシュとファイルサイズで検証したうえで、旧アプリを終了し、EXE を置換して再起動します。置換に失敗した場合は元の EXE の復元を試みます。書き込み権限がない場所では自動置換に失敗する可能性があります。**v0.4 以前から v0.5 への移行時には、新しい EXE を一度手動でダウンロードしてください。**
 
 ## ソースコードとビルド
 
@@ -65,9 +62,9 @@
 
 ```sh
 go test ./selftest
-GOOS=windows GOARCH=amd64 CGO_ENABLED=0 go build -ldflags="-H windowsgui -s -w" -o WANY-Keyboard-Switcher-v0.4.exe .
+GOOS=windows GOARCH=amd64 CGO_ENABLED=0 go build -ldflags="-H windowsgui -s -w" -o WANY-Keyboard-Switcher.exe .
 ```
 
 Windows PowerShell では、環境変数を PowerShell の構文で設定してください。アイコン画像を再生成する場合のみ Python と Pillow が必要です。EXE のアイコンリソースを再生成するには `make_windows_resource.py` を使用し、Windows 64 ビット版のビルド時は `rsrc_windows_amd64.syso` を Go のソースディレクトリ内に配置してください。
 
-**実行ファイルとソースコード ZIP：** [v0.4 リリース](https://github.com/LeeWan1210/WANY-Keyboard-Switcher/releases/tag/v0.4)
+**実行ファイルとソースコード ZIP：** [v0.5 リリース](https://github.com/LeeWan1210/WANY-Keyboard-Switcher/releases/tag/v0.5)
