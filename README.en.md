@@ -4,11 +4,12 @@
 
 **Documentation:** [한국어](README.md) · [English (current)](README.en.md) · [日本語](README.ja.md)
 
-> Current version: **v0.3** · Windows 10/11, 64-bit · No AutoHotkey or Interception driver installation required  
+> Current version: **v0.4** · Windows 10/11, 64-bit · No AutoHotkey or Interception driver installation required  
 > **[Download the latest release](https://github.com/LeeWan1210/WANY-Keyboard-Switcher/releases/latest)**
 
 ## Features
 
+- **Pause/resume:** Temporarily disable key conversion without exiting. Physical key events pass through unchanged, the notification-area icon turns gray with a pause badge, and the state is saved.
 - Click the notification-area icon to manually switch **US ↔ JIS** profiles.
 - See a **blue US / orange JIS** keyboard icon for the selected profile. The EXE also has an embedded keyboard icon.
 - Adjust a subset of symbol keys in Korean, English, and Japanese input environments.
@@ -18,11 +19,13 @@
 ## Installation and use
 
 1. Exit any previously running v0.1/v0.2 instance. Running multiple versions may cause conflicting key interception.
-2. Download and run `WANY-Keyboard-Switcher-v0.3.exe` from the [releases page](https://github.com/LeeWan1210/WANY-Keyboard-Switcher/releases/latest).
+2. Download and run `WANY-Keyboard-Switcher-v0.4.exe` from the [releases page](https://github.com/LeeWan1210/WANY-Keyboard-Switcher/releases/latest).
 3. Look for the keyboard icon in the notification area, including the hidden-icons menu (`^`).
-4. **Left-click:** toggle US/JIS. **Right-click:** choose the profile directly, set the Japanese IME baseline, change the menu language, enable input diagnostics, or exit.
+4. **Left-click:** toggle US/JIS while active, or resume conversion when paused. **Right-click:** choose a profile, **pause/resume conversion**, set the Japanese IME baseline, change the menu language, enable diagnostics, or exit.
 5. Select **JIS** for a physical Japanese keyboard such as the TH108 JIS, and **US** for a physical US/ANSI keyboard.
 6. If you use the Japanese IME, set **Japanese IME Windows layout** in the app menu to match the hardware keyboard layout configured in Windows. This app menu does **not** change the Windows setting.
+
+**While paused:** The application remains running, forwards original keyboard input, and displays a gray keyboard icon with pause bars. Left-click the icon or choose “Resume key conversion” from its right-click menu to resume. The paused state and selected layout persist across restarts.
 
 **Note:** The app does not automatically detect which physical keyboard is connected. Change the profile manually when you switch keyboards.
 
@@ -62,9 +65,9 @@ The application is written in Go. With the checked-in icon resources, **Go 1.23 
 
 ```sh
 go test ./selftest
-GOOS=windows GOARCH=amd64 CGO_ENABLED=0 go build -ldflags="-H windowsgui -s -w" -o WANY-Keyboard-Switcher-v0.3.exe .
+GOOS=windows GOARCH=amd64 CGO_ENABLED=0 go build -ldflags="-H windowsgui -s -w" -o WANY-Keyboard-Switcher-v0.4.exe .
 ```
 
 In Windows PowerShell, set environment variables using the appropriate PowerShell syntax. Python and Pillow are needed only when regenerating icon images. Use `make_windows_resource.py` to regenerate the EXE's icon resource, and keep `rsrc_windows_amd64.syso` in the Go package directory for Windows x64 builds.
 
-**Executable and source ZIP:** [v0.3 release](https://github.com/LeeWan1210/WANY-Keyboard-Switcher/releases/tag/v0.3)
+**Executable and source ZIP:** [v0.4 release](https://github.com/LeeWan1210/WANY-Keyboard-Switcher/releases/tag/v0.4)
