@@ -74,4 +74,4 @@ In Windows PowerShell, set environment variables using the appropriate PowerShel
 
 This free utility grew out of the frustration of coding with a Japanese keyboard while typing in Korean. If it has helped you, you can **[buy me a coffee](https://buymeacoffee.com/dldhks1234)**. Support is entirely optional; all features remain available without a donation.
 
-<a href="https://buymeacoffee.com/dldhks1234"><img src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png" alt="Buy me a coffee" width="180"></a>
+<a href="https://www.buymeacoffee.com/dldhks1234"><img src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png" alt="Buy Me a Coffee" width="217" height="60"></a>
