@@ -13,15 +13,17 @@ import (
 )
 
 const (
-	startupRegistryKey   = "Software\\Microsoft\\Windows\\CurrentVersion\\Run"
-	startupRegistryValue = "WANY Keyboard Switcher"
+	startupRegistryKey      = "Software\\Microsoft\\Windows\\CurrentVersion\\Run"
+	startupRegistryValue    = "WANY Keyboard Switcher"
+	singleInstanceMutexName = "Local\\WANYKeyboardSwitcher.SingleInstance"
 
 	regSZ         = 1
 	keyQueryValue = 0x0001
 	keySetValue   = 0x0002
 
-	errorSuccess      = 0
-	errorFileNotFound = 2
+	errorSuccess       = 0
+	errorFileNotFound  = 2
+	errorAlreadyExists = 183
 )
 
 var (
@@ -32,7 +34,48 @@ var (
 	pRegSetValueEx   = advapi32.NewProc("RegSetValueExW")
 	pRegDeleteValue  = advapi32.NewProc("RegDeleteValueW")
 	pRegCloseKey     = advapi32.NewProc("RegCloseKey")
+
+	pCreateMutexSingleInstance = kernel32.NewProc("CreateMutexW")
+	pCloseSingleInstanceHandle = kernel32.NewProc("CloseHandle")
+	pSetLastErrorSingleInstance = kernel32.NewProc("SetLastError")
+	singleInstanceHandle        uintptr
 )
+
+// init runs before the tray window and keyboard hook are created, so duplicate
+// launches cannot install a second hook. The self-update helper is intentionally
+// exempt because it must run while the old app instance is still shutting down.
+func init() {
+	if len(os.Args) > 1 && os.Args[1] == "--apply-update" {
+		return
+	}
+
+	name, err := syscall.UTF16PtrFromString(singleInstanceMutexName)
+	if err != nil {
+		os.Exit(1)
+	}
+
+	// CreateMutexW reports an existing named mutex through GetLastError while
+	// still returning a valid handle. Clear stale thread error state first.
+	pSetLastErrorSingleInstance.Call(0)
+	handle, _, lastErr := pCreateMutexSingleInstance.Call(
+		0,
+		0,
+		uintptr(unsafe.Pointer(name)),
+	)
+	runtime.KeepAlive(name)
+
+	if handle == 0 {
+		os.Exit(1)
+	}
+	if errors.Is(lastErr, syscall.Errno(errorAlreadyExists)) {
+		pCloseSingleInstanceHandle.Call(handle)
+		os.Exit(0)
+	}
+
+	// Keep the mutex handle open for the entire app lifetime. Windows releases
+	// it automatically when this process exits or crashes.
+	singleInstanceHandle = handle
+}
 
 func startupUTF16Ptr(value string) (*uint16, error) {
 	return syscall.UTF16PtrFromString(value)
