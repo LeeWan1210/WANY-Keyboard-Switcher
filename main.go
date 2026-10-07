@@ -320,17 +320,17 @@ func toggleStartupRegistration() {
 	enabled, err := startupEnabled()
 	if err != nil {
 		notice(t(
-			"시작프로그램 등록 상태를 확인하지 못했습니다.\\n\\n",
-			"Could not read the Windows startup registration.\\n\\n",
-			"Windows の自動起動設定を確認できませんでした。\\n\\n",
+			"시작프로그램 등록 상태를 확인하지 못했습니다.\n\n",
+			"Could not read the Windows startup registration.\n\n",
+			"Windows の自動起動設定を確認できませんでした。\n\n",
 		)+err.Error(), MB_OK|MB_ICONERROR)
 		return
 	}
 	if err := setStartupEnabled(!enabled); err != nil {
 		notice(t(
-			"시작프로그램 설정을 변경하지 못했습니다.\\n\\n",
-			"Could not change the Windows startup registration.\\n\\n",
-			"Windows の自動起動設定を変更できませんでした。\\n\\n",
+			"시작프로그램 설정을 변경하지 못했습니다.\n\n",
+			"Could not change the Windows startup registration.\n\n",
+			"Windows の自動起動設定を変更できませんでした。\n\n",
 		)+err.Error(), MB_OK|MB_ICONERROR)
 	}
 }
