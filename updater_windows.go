@@ -24,7 +24,7 @@ import (
 
 // This value is embedded by the tagged release build with -ldflags "-X main.appVersion=vX.Y".
 // GitHub tags, rather than a versioned EXE filename, determine update ordering.
-var appVersion = "v0.5"
+var appVersion = "v0.7"
 
 const (
 	WM_UPDATE_RESULT = WM_APP + 3
