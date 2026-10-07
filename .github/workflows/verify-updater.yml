@@ -5,6 +5,14 @@ on:
     paths:
       - '.github/workflows/verify-updater.yml'
       - 'main.go'
+      - 'startup_windows.go'
+      - 'updater_windows.go'
+      - 'updatecore/**'
+  pull_request:
+    paths:
+      - '.github/workflows/verify-updater.yml'
+      - 'main.go'
+      - 'startup_windows.go'
       - 'updater_windows.go'
       - 'updatecore/**'
   workflow_dispatch:
