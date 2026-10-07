@@ -32,5 +32,5 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          CGO_ENABLED=0 GOOS=windows GOARCH=amd64 go build -ldflags="-H windowsgui -s -w -X main.appVersion=v0.7" -o /tmp/WANY-Keyboard-Switcher.exe .
+          CGO_ENABLED=0 GOOS=windows GOARCH=amd64 go build -ldflags="-H windowsgui -s -w -X main.appVersion=v0.8" -o /tmp/WANY-Keyboard-Switcher.exe .
           test -s /tmp/WANY-Keyboard-Switcher.exe
