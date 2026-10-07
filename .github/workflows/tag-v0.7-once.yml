@@ -1,4 +1,4 @@
-name: Create v0.7 tag once
+name: Publish v0.7 once
 
 on:
   push:
@@ -9,20 +9,42 @@ permissions:
   contents: write
 
 jobs:
-  tag-v0-7:
-    if: startsWith(github.event.head_commit.message, 'Release v0.7')
-    runs-on: ubuntu-latest
+  publish-v0-7:
+    if: startsWith(github.event.head_commit.message, 'Publish v0.7')
+    runs-on: windows-latest
     steps:
       - uses: actions/checkout@v4
         with:
-          fetch-depth: 0
-      - name: Create and push v0.7 tag
-        shell: bash
+          ref: v0.7
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+      - name: Test symbol mapping
+        run: go test ./selftest ./updatecore
+      - name: Build Windows executable with embedded icon
+        shell: pwsh
         run: |
-          set -euo pipefail
-          if git ls-remote --exit-code --tags origin refs/tags/v0.7 >/dev/null 2>&1; then
-            echo "v0.7 already exists; refusing to move it."
-            exit 0
-          fi
-          git tag v0.7 "$GITHUB_SHA"
-          git push origin refs/tags/v0.7
+          New-Item -Type Directory dist -Force | Out-Null
+          $env:CGO_ENABLED='0'
+          $env:GOOS='windows'
+          $env:GOARCH='amd64'
+          go build -ldflags='-H windowsgui -s -w -X main.appVersion=v0.7' -o dist/WANY-Keyboard-Switcher.exe .
+      - name: Package source
+        shell: pwsh
+        run: |
+          $paths = @('main.go','startup_windows.go','updater_windows.go','go.mod','updatecore','README.md','README.en.md','README.ja.md','release-notes','icon_app.ico','icon_app.png','icon_us.ico','icon_us.png','icon_jis.ico','icon_jis.png','rsrc_windows_amd64.syso','make_icons.py','make_windows_resource.py','selftest')
+          Compress-Archive -Path $paths -DestinationPath dist/WANY-Keyboard-Switcher-source.zip -Force
+      - name: Publish GitHub Release
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if (gh release view v0.7 *> $null) {
+            Write-Host 'v0.7 release already exists; refusing to replace it.'
+            exit 1
+          }
+          gh release create v0.7 dist/WANY-Keyboard-Switcher.exe dist/WANY-Keyboard-Switcher-source.zip --title 'WANY Keyboard Switcher v0.7' --notes-file 'release-notes/v0.7.md'
+      - uses: actions/upload-artifact@v4
+        with:
+          name: WANY-Keyboard-Switcher-v0.7-Windows
+          path: dist/*
