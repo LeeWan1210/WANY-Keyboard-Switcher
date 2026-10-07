@@ -61,6 +61,7 @@ const (
 	ID_LANG_EN        = 107
 	ID_LANG_JA        = 108
 	ID_TOGGLE_ENABLED = 109
+	ID_STARTUP        = 111
 	LANG_ENGLISH      = 0x09
 	WM_SENDFEEDBACK   = WM_APP + 2
 	LANG_KOREAN       = 0x12
@@ -314,6 +315,25 @@ func setDisabled(disabled bool) {
 	}
 }
 func setUILanguage(v string) { conf.UILanguage = v; save(); tray(NIM_MODIFY) }
+
+func toggleStartupRegistration() {
+	enabled, err := startupEnabled()
+	if err != nil {
+		notice(t(
+			"시작프로그램 등록 상태를 확인하지 못했습니다.\n\n",
+			"Could not read the Windows startup registration.\n\n",
+			"Windows の自動起動設定を確認できませんでした。\n\n",
+		)+err.Error(), MB_OK|MB_ICONERROR)
+		return
+	}
+	if err := setStartupEnabled(!enabled); err != nil {
+		notice(t(
+			"시작프로그램 설정을 변경하지 못했습니다.\n\n",
+			"Could not change the Windows startup registration.\n\n",
+			"Windows の自動起動設定を変更できませんでした。\n\n",
+		)+err.Error(), MB_OK|MB_ICONERROR)
+	}
+}
 func appendMenu(menu uintptr, flags uintptr, id uintptr, label string) {
 	pAppendMenu.Call(menu, flags, id, uintptr(unsafe.Pointer(ptr(label))))
 }
@@ -363,6 +383,20 @@ func popMenu() {
 		appendMenu(menu, MF_POPUP|MF_STRING, languageMenu, t("표시 언어", "Display language", "表示言語"))
 	}
 	pAppendMenu.Call(menu, MF_SEPARATOR, 0, 0)
+	startupFlag := uintptr(MF_STRING)
+	startupLabel := t("Windows 시작 시 자동 실행", "Run at Windows startup", "Windows 起動時に自動実行")
+	if enabled, err := startupEnabled(); err != nil {
+		startupFlag |= MF_DISABLED
+		startupLabel = t(
+			"Windows 시작 시 자동 실행 (상태 확인 실패)",
+			"Run at Windows startup (status unavailable)",
+			"Windows 起動時に自動実行（状態確認失敗）",
+		)
+	} else if enabled {
+		startupFlag |= MF_CHECKED
+	}
+	appendMenu(menu, startupFlag, ID_STARTUP, startupLabel)
+	pAppendMenu.Call(menu, MF_SEPARATOR, 0, 0)
 	checkFlag := uintptr(MF_STRING)
 	if updateBusy { checkFlag |= MF_DISABLED }
 	appendMenu(menu, checkFlag, ID_CHECK_UPDATE, t("업데이트 확인 ("+appVersion+")", "Check for updates ("+appVersion+")", "更新を確認 ("+appVersion+")"))
@@ -408,6 +442,8 @@ func wndProc(hwnd uintptr, m uint32, w, l uintptr) uintptr {
 			}
 			save()
 			tray(NIM_MODIFY)
+		case ID_STARTUP:
+			toggleStartupRegistration()
 		case ID_CHECK_UPDATE:
 			beginUpdateCheck(true)
 		case ID_LANG_KO:
